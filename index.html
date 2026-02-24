@@ -1,750 +1,665 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no" />
-  <title>Seagull Simulator</title>
-  <style>
-    :root {
-      --sand: #f8d777;
-      --sea: #63c6ff;
-      --ui: #0f1f38;
-      --card: #ffffffee;
-      --accent: #ff9f1c;
-    }
-    * { box-sizing: border-box; }
-    body {
-      margin: 0;
-      font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
-      background: linear-gradient(180deg, var(--sea) 0%, #8ad8ff 24%, var(--sand) 24%, #f2c96a 100%);
-      color: #12233f;
-      min-height: 100vh;
-      display: grid;
-      place-items: center;
-      padding: 10px;
-      touch-action: manipulation;
-    }
-    .wrap {
-      width: min(96vw, 980px);
-      display: grid;
-      gap: 10px;
-    }
-    .hud {
-      background: var(--card);
-      border-radius: 14px;
-      padding: 10px 12px;
-      font-weight: 800;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      flex-wrap: wrap;
-      gap: 6px;
-      box-shadow: 0 8px 20px rgba(0,0,0,.12);
-    }
-    #game {
-      width: 100%;
-      aspect-ratio: 16/9;
-      background: #f7d57d;
-      border-radius: 14px;
-      border: 3px solid #ffffffaa;
-      box-shadow: 0 10px 24px rgba(0,0,0,.18);
-      display: block;
-      touch-action: none;
-    }
-    .controls {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 10px;
-    }
-    .btn {
-      border: none;
-      border-radius: 12px;
-      padding: 12px;
-      font-size: 1rem;
-      font-weight: 900;
-      color: #12233f;
-      background: #fff;
-      box-shadow: 0 6px 16px rgba(0,0,0,.15);
-    }
-    .btn:active { transform: translateY(1px); }
-    #screamBtn { background: #ffe16b; }
-    #grabBtn { background: #9cffb0; }
-    .cool {
-      height: 10px;
-      width: 100%;
-      background: #ffffffaa;
-      border-radius: 999px;
-      overflow: hidden;
-      border: 1px solid #00000020;
-    }
-    #coolFill {
-      height: 100%;
-      width: 100%;
-      background: linear-gradient(90deg, #ff6666, #ffd166);
-      transition: width .06s linear;
-    }
-    .meta {
-      display: grid;
-      gap: 8px;
-      grid-template-columns: 1fr;
-      background: var(--card);
-      border-radius: 12px;
-      padding: 10px;
-      box-shadow: 0 8px 20px rgba(0,0,0,.12);
-      font-size: .95rem;
-    }
-    #overlay {
-      position: fixed;
-      inset: 0;
-      display: grid;
-      place-items: center;
-      background: rgba(9,17,30,.55);
-      z-index: 10;
-    }
-    #panel {
-      width: min(90vw, 560px);
-      background: #ffffff;
-      border-radius: 16px;
-      padding: 18px;
-      text-align: center;
-      box-shadow: 0 14px 28px rgba(0,0,0,.25);
-    }
-    #panel h1 { margin: 0 0 10px; }
-    #panel .small { color: #42557f; }
-    #playAgain {
-      margin-top: 10px;
-      border: none;
-      background: #ffcf3c;
-      border-radius: 12px;
-      padding: 11px 14px;
-      font-weight: 900;
-      cursor: pointer;
-    }
-    .hidden { display: none !important; }
-    @media (min-width: 760px) {
-      .meta { grid-template-columns: 1fr 1fr; }
-      .controls { grid-template-columns: 180px 180px; justify-content: start; }
-    }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Manatee Simulator</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Quicksand:wght@300;400;600&display=swap');
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { overflow: hidden; background: #0a1628; font-family: 'Quicksand', sans-serif; cursor: none; user-select: none; }
+  canvas { display: block; }
+
+  #title-screen {
+    position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    z-index: 100;
+    background: linear-gradient(180deg, #0a2a4a 0%, #0d3d5c 30%, #1a6b7a 60%, #2a9d8f 80%, #40c9a2 100%);
+    transition: opacity 2s ease;
+    cursor: pointer;
+  }
+  #title-screen.hidden { opacity: 0; pointer-events: none; }
+  #title-screen h1 {
+    font-size: clamp(2.5rem, 8vw, 5.5rem); font-weight: 300; color: #e0f7fa;
+    letter-spacing: 0.15em; text-transform: uppercase; margin-bottom: 0.2em;
+    text-shadow: 0 0 60px rgba(64,201,162,0.4); animation: titleFloat 4s ease-in-out infinite;
+  }
+  #title-screen p {
+    font-size: clamp(0.9rem, 2.5vw, 1.3rem); color: rgba(224,247,250,0.5);
+    font-weight: 300; letter-spacing: 0.3em; margin-bottom: 3em;
+  }
+  #title-screen .start-hint {
+    font-size: clamp(0.8rem, 2vw, 1rem); color: rgba(224,247,250,0.35);
+    letter-spacing: 0.2em; animation: pulse 2.5s ease-in-out infinite;
+  }
+  @keyframes titleFloat { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-10px)} }
+  @keyframes pulse { 0%,100%{opacity:0.35} 50%{opacity:0.7} }
+
+  #ui {
+    position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+    pointer-events: none; z-index: 10;
+  }
+  #mood-text {
+    position: fixed; bottom: 40px; left: 50%; transform: translateX(-50%);
+    color: rgba(224,247,250,0.3); font-size: clamp(0.75rem, 1.8vw, 1rem);
+    font-weight: 300; letter-spacing: 0.25em; text-align: center;
+    opacity: 0; transition: opacity 1.5s ease;
+  }
+  #mood-text.visible { opacity: 1; }
+  #controls-hint {
+    position: fixed; top: 25px; left: 50%; transform: translateX(-50%);
+    color: rgba(224,247,250,0.2); font-size: 0.65rem; letter-spacing: 0.2em;
+    text-align: center; transition: opacity 3s ease;
+  }
+  #crosshair {
+    position: fixed; top: 50%; left: 50%; transform: translate(-50%,-50%);
+    width: 6px; height: 6px; border-radius: 50%;
+    border: 1px solid rgba(224,247,250,0.15);
+    pointer-events: none;
+  }
+
+  #mobile-controls {
+    display: none; position: fixed; bottom: 30px; left: 30px;
+    width: 120px; height: 120px; z-index: 50; pointer-events: all;
+  }
+  #joystick-base {
+    width: 120px; height: 120px; border-radius: 50%;
+    background: rgba(224,247,250,0.06); border: 1px solid rgba(224,247,250,0.1);
+    position: relative;
+  }
+  #joystick-thumb {
+    width: 40px; height: 40px; border-radius: 50%;
+    background: rgba(224,247,250,0.15);
+    position: absolute; top: 40px; left: 40px;
+  }
+  @media (pointer: coarse) {
+    #mobile-controls { display: block; }
+    #crosshair { display: none; }
+    #controls-hint { display: none; }
+  }
+</style>
 </head>
 <body>
-  <div class="wrap">
-    <div class="hud">
-      <div id="lives">❤️❤️❤️</div>
-      <div id="score">Score: 0</div>
-      <div id="level">Level: 1 — Beach Blankets</div>
-      <div id="timer">⏱ 60</div>
-    </div>
 
-    <canvas id="game" width="960" height="540"></canvas>
+<div id="title-screen" onclick="startGame()">
+  <h1>Manatee Simulator</h1>
+  <p>no goals · no pressure · just float</p>
+  <div class="start-hint">click anywhere to begin</div>
+</div>
 
-    <div class="controls">
-      <button id="screamBtn" class="btn">SCREAM 🔊</button>
-      <button id="grabBtn" class="btn">Grab 🦀</button>
-    </div>
+<div id="ui">
+  <div id="mood-text"></div>
+  <div id="controls-hint">WASD to swim · mouse to look · space/shift for up/down · scroll to zoom</div>
+  <div id="crosshair"></div>
+</div>
 
-    <div class="cool"><div id="coolFill"></div></div>
+<div id="mobile-controls">
+  <div id="joystick-base"><div id="joystick-thumb"></div></div>
+</div>
 
-    <div class="meta">
-      <div id="statusText">MINE! MINE! MINE!</div>
-      <div id="lbText">Leaderboard loading...</div>
-    </div>
-  </div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+let started = false;
+let scene, camera, renderer, clock;
+let manateeGroup;
+let keys = {};
+let cameraAngleH = 0, cameraAngleV = 0.15;
+let cameraDist = 12;
+let isPointerLocked = false;
+let joystickActive = false, joystickDX = 0, joystickDZ = 0;
+let touchLookId = null, touchLookStartX = 0, touchLookStartY = 0;
+const isMobile = 'ontouchstart' in window && window.innerWidth < 1024;
+const worldSize = 300;
+const seagrassBlades = [];
+const fishGroups = [];
+const jellyfishList = [];
+const lightShafts = [];
+const bubbleList = [];
+const particleList = [];
 
-  <div id="overlay">
-    <div id="panel">
-      <h1>🐦 Seagull Simulator</h1>
-      <p class="small">Steal food. Dodge humans. Scream chaos.</p>
-      <p class="small">WASD/Arrows to move • Space = Scream • E = Grab</p>
-      <button id="playAgain">Start Terrorizing</button>
-    </div>
-  </div>
+const moods = [
+  'just floating...', 'the water is warm here', 'no thoughts, only manatee',
+  'a gentle current passes by', 'the seagrass sways softly', 'everything is okay',
+  'breathe in... breathe out...', 'the sunlight dances above', 'you are enough',
+  'time moves slowly here', 'the ocean holds you', 'peace',
+  'you drift with the tide', 'nothing to do. nowhere to be.',
+  'a ray of light finds you', 'the world can wait',
+  'somewhere above, the sky is clear', 'this moment is yours',
+  'the seafloor hums quietly', 'slow down. you\'re already here.',
+];
 
-  <script>
-    const cvs = document.getElementById('game');
-    const ctx = cvs.getContext('2d');
+function init() {
+  scene = new THREE.Scene();
+  scene.fog = new THREE.FogExp2(0x0b3d4d, 0.012);
 
-    const uiLives = document.getElementById('lives');
-    const uiScore = document.getElementById('score');
-    const uiLevel = document.getElementById('level');
-    const uiTimer = document.getElementById('timer');
-    const uiStatus = document.getElementById('statusText');
-    const uiLB = document.getElementById('lbText');
-    const coolFill = document.getElementById('coolFill');
+  camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 500);
+  renderer = new THREE.WebGLRenderer({ antialias: true });
+  renderer.setSize(window.innerWidth, window.innerHeight);
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  renderer.setClearColor(0x0b3d4d);
+  document.body.appendChild(renderer.domElement);
+  clock = new THREE.Clock();
 
-    const overlay = document.getElementById('overlay');
-    const panel = document.getElementById('panel');
-    const playAgainBtn = document.getElementById('playAgain');
+  scene.add(new THREE.AmbientLight(0x2a5a6a, 0.6));
+  const sun = new THREE.DirectionalLight(0x88ccaa, 0.8);
+  sun.position.set(50, 100, 30);
+  scene.add(sun);
+  scene.add(new THREE.DirectionalLight(0x446688, 0.3).translateX(-30));
+  const caustic = new THREE.PointLight(0x66ddbb, 0.5, 60);
+  caustic.position.set(0, 30, 0);
+  scene.add(caustic);
 
-    const screamBtn = document.getElementById('screamBtn');
-    const grabBtn = document.getElementById('grabBtn');
+  buildManatee();
+  buildSeafloor();
+  buildSeagrass();
+  buildCorals();
+  buildFish();
+  buildJellyfish();
+  buildLightShafts();
+  buildWaterSurface();
+  buildParticles();
 
-    const W = cvs.width;
-    const H = cvs.height;
+  manateeGroup.position.set(0, 8, 0);
+  setupInput();
+  showMood();
+}
 
-    const levels = [
-      { name: 'Beach Blankets', threshold: 240, humanMult: 1, foodMult: 1 },
-      { name: 'Boardwalk', threshold: 420, humanMult: 1.25, foodMult: 1.2 },
-      { name: 'Outdoor Restaurant Patio', threshold: 650, humanMult: 1.55, foodMult: 1.4 }
-    ];
+function buildManatee() {
+  manateeGroup = new THREE.Group();
+  const bodyMat = new THREE.MeshPhongMaterial({ color: 0x7a9a78, shininess: 15 });
+  const bellyMat = new THREE.MeshPhongMaterial({ color: 0x95ab90, shininess: 10 });
+  const darkMat = new THREE.MeshPhongMaterial({ color: 0x5a7a58, shininess: 5 });
 
-    const foodsBase = [
-      { kind: 'fries', value: 10, color: '#ffd166' },
-      { kind: 'hotdog', value: 25, color: '#d97706' },
-      { kind: 'icecream', value: 50, color: '#fde68a' },
-      { kind: 'pizza', value: 100, color: '#fb7185' }
-    ];
+  // Body
+  const bodyGeo = new THREE.SphereGeometry(1, 16, 12);
+  bodyGeo.scale(2.2, 1, 1.1);
+  manateeGroup.add(new THREE.Mesh(bodyGeo, bodyMat));
 
-    const state = {
-      running: false,
-      level: 0,
-      score: 0,
-      lives: 3,
-      timer: 60,
-      screamCd: 0,
-      invuln: 0,
-      shake: 0,
-      seagull: { x: W * 0.22, y: H * 0.52, r: 15, speed: 220, vx: 0, vy: 0 },
-      foods: [],
-      blankets: [],
-      humans: [],
-      projectiles: [],
-      floating: [],
-      keys: {},
-      pointer: null,
-      audioCtx: null,
-      leaderboard: []
-    };
+  // Belly
+  const bellyGeo = new THREE.SphereGeometry(1, 12, 8);
+  bellyGeo.scale(1.6, 0.7, 0.9);
+  const belly = new THREE.Mesh(bellyGeo, bellyMat);
+  belly.position.set(0.2, -0.25, 0);
+  manateeGroup.add(belly);
 
-    function rand(min, max) { return min + Math.random() * (max - min); }
-    function pick(arr) { return arr[(Math.random() * arr.length) | 0]; }
+  // Head
+  const headGeo = new THREE.SphereGeometry(0.85, 12, 10);
+  headGeo.scale(1, 0.9, 0.95);
+  const head = new THREE.Mesh(headGeo, bodyMat);
+  head.position.set(2.1, 0.1, 0);
+  manateeGroup.add(head);
 
-    function setStatus(t) { uiStatus.textContent = t; }
+  // Snout
+  const snoutGeo = new THREE.SphereGeometry(0.55, 10, 8);
+  snoutGeo.scale(0.8, 0.85, 1);
+  const snout = new THREE.Mesh(snoutGeo, new THREE.MeshPhongMaterial({ color: 0x8aaa86, shininess: 20 }));
+  snout.position.set(2.8, -0.05, 0);
+  manateeGroup.add(snout);
 
-    function sound(type) {
-      const AC = window.AudioContext || window.webkitAudioContext;
-      if (!AC) return;
-      if (!state.audioCtx) state.audioCtx = new AC();
-      const ac = state.audioCtx;
-      if (ac.state === 'suspended') ac.resume();
+  // Eyes
+  const ewGeo = new THREE.SphereGeometry(0.12, 8, 8);
+  const ewMat = new THREE.MeshPhongMaterial({ color: 0xddeedd, shininess: 50 });
+  const epGeo = new THREE.SphereGeometry(0.08, 8, 8);
+  const epMat = new THREE.MeshPhongMaterial({ color: 0x1a2a1a, shininess: 80 });
+  [-1, 1].forEach(s => {
+    const ew = new THREE.Mesh(ewGeo, ewMat);
+    ew.position.set(2.35, 0.25, s * 0.65);
+    manateeGroup.add(ew);
+    const ep = new THREE.Mesh(epGeo, epMat);
+    ep.position.set(2.42, 0.26, s * 0.68);
+    manateeGroup.add(ep);
+  });
 
-      const o = ac.createOscillator();
-      const g = ac.createGain();
-      o.connect(g); g.connect(ac.destination);
+  // Nostrils
+  const nGeo = new THREE.SphereGeometry(0.06, 6, 6);
+  const nMat = new THREE.MeshPhongMaterial({ color: 0x4a6a48 });
+  [-1, 1].forEach(s => {
+    const n = new THREE.Mesh(nGeo, nMat);
+    n.position.set(3.15, 0.15, s * 0.18);
+    manateeGroup.add(n);
+  });
 
-      const t0 = ac.currentTime;
-      if (type === 'flap') {
-        o.type = 'triangle';
-        o.frequency.setValueAtTime(920, t0);
-        g.gain.setValueAtTime(0.001, t0);
-        g.gain.exponentialRampToValueAtTime(0.05, t0 + 0.008);
-        g.gain.exponentialRampToValueAtTime(0.001, t0 + 0.05);
-        o.start(t0); o.stop(t0 + 0.06);
-      } else if (type === 'grab') {
-        o.type = 'sine';
-        o.frequency.setValueAtTime(520, t0);
-        o.frequency.exponentialRampToValueAtTime(740, t0 + 0.05);
-        g.gain.setValueAtTime(0.001, t0);
-        g.gain.exponentialRampToValueAtTime(0.06, t0 + 0.01);
-        g.gain.exponentialRampToValueAtTime(0.001, t0 + 0.09);
-        o.start(t0); o.stop(t0 + 0.1);
-      } else if (type === 'hit') {
-        o.type = 'square';
-        o.frequency.setValueAtTime(280, t0);
-        o.frequency.exponentialRampToValueAtTime(130, t0 + 0.24);
-        g.gain.setValueAtTime(0.001, t0);
-        g.gain.exponentialRampToValueAtTime(0.08, t0 + 0.02);
-        g.gain.exponentialRampToValueAtTime(0.001, t0 + 0.3);
-        o.start(t0); o.stop(t0 + 0.31);
-      } else if (type === 'milestone') {
-        [['sine', 520, 0], ['triangle', 650, 0.03], ['sine', 780, 0.05]].forEach(([ty, hz, delay]) => {
-          const oo = ac.createOscillator();
-          const gg = ac.createGain();
-          oo.type = ty;
-          oo.frequency.setValueAtTime(hz, t0 + delay);
-          gg.gain.setValueAtTime(0.001, t0 + delay);
-          gg.gain.exponentialRampToValueAtTime(0.06, t0 + delay + 0.01);
-          gg.gain.exponentialRampToValueAtTime(0.001, t0 + delay + 0.14);
-          oo.connect(gg); gg.connect(ac.destination);
-          oo.start(t0 + delay); oo.stop(t0 + delay + 0.16);
-        });
-      }
+  // Tail
+  const tailGeo = new THREE.SphereGeometry(1, 10, 6);
+  tailGeo.scale(1.2, 0.15, 0.9);
+  const tail = new THREE.Mesh(tailGeo, darkMat);
+  tail.position.set(-3, 0, 0);
+  tail.name = 'tail';
+  manateeGroup.add(tail);
+
+  const tcGeo = new THREE.SphereGeometry(0.5, 8, 6);
+  tcGeo.scale(1.5, 0.6, 0.6);
+  const tc = new THREE.Mesh(tcGeo, bodyMat);
+  tc.position.set(-2.2, 0, 0);
+  tc.name = 'tailConn';
+  manateeGroup.add(tc);
+
+  // Flippers
+  [-1, 1].forEach(s => {
+    const fGeo = new THREE.SphereGeometry(0.4, 8, 6);
+    fGeo.scale(1.2, 0.2, 0.7);
+    const f = new THREE.Mesh(fGeo, darkMat);
+    f.position.set(0.8, -0.6, s * 1.1);
+    f.rotation.x = s * 0.3;
+    f.rotation.z = s * 0.4;
+    f.name = s > 0 ? 'flipperR' : 'flipperL';
+    manateeGroup.add(f);
+  });
+
+  manateeGroup.scale.set(0.7, 0.7, 0.7);
+  scene.add(manateeGroup);
+}
+
+function buildSeafloor() {
+  const geo = new THREE.PlaneGeometry(worldSize, worldSize, 80, 80);
+  geo.rotateX(-Math.PI / 2);
+  const pos = geo.attributes.position;
+  for (let i = 0; i < pos.count; i++) {
+    const x = pos.getX(i), z = pos.getZ(i);
+    pos.setY(i, -2 + Math.sin(x * 0.05) * 1.5 + Math.cos(z * 0.07) * 1.2
+      + Math.sin(x * 0.02 + z * 0.03) * 3 + (Math.random() - 0.5) * 0.4);
+  }
+  geo.computeVertexNormals();
+  const floor = new THREE.Mesh(geo, new THREE.MeshPhongMaterial({ color: 0x3a5a3a, shininess: 5, flatShading: true }));
+  floor.position.y = -5;
+  scene.add(floor);
+
+  for (let i = 0; i < 30; i++) {
+    const rGeo = new THREE.DodecahedronGeometry(0.5 + Math.random() * 2, 1);
+    rGeo.scale(1, 0.5 + Math.random() * 0.5, 1);
+    const rock = new THREE.Mesh(rGeo, new THREE.MeshPhongMaterial({
+      color: new THREE.Color().setHSL(0.28, 0.15, 0.25 + Math.random() * 0.1), flatShading: true,
+    }));
+    rock.position.set((Math.random()-0.5)*worldSize*0.8, -5+Math.random()*0.5, (Math.random()-0.5)*worldSize*0.8);
+    rock.rotation.y = Math.random() * Math.PI * 2;
+    scene.add(rock);
+  }
+}
+
+function buildSeagrass() {
+  for (let i = 0; i < 200; i++) {
+    const h = 1.5 + Math.random() * 4;
+    const geo = new THREE.PlaneGeometry(0.15 + Math.random() * 0.1, h, 1, 4);
+    const p = geo.attributes.position;
+    for (let j = 0; j < p.count; j++) {
+      const t = (p.getY(j) + h / 2) / h;
+      p.setX(j, p.getX(j) + Math.sin(t * 1.5) * 0.3);
     }
-
-    async function storageGet(key) {
-      try {
-        if (window.storage?.get) return await window.storage.get(key);
-      } catch {}
-      return localStorage.getItem(key);
-    }
-    async function storageSet(key, value, shared = false) {
-      try {
-        if (window.storage?.set) return await window.storage.set(key, value, shared);
-      } catch {}
-      localStorage.setItem(key, value);
-    }
-
-    async function loadLeaderboard() {
-      const raw = await storageGet('seagull:leaderboard');
-      state.leaderboard = raw ? JSON.parse(raw) : [];
-      renderLeaderboardText();
-    }
-
-    function renderLeaderboardText() {
-      if (!state.leaderboard.length) {
-        uiLB.textContent = 'Global leaderboard: nobody has stolen lunch yet.';
-        return;
-      }
-      const top = state.leaderboard.slice(0, 3).map((s, i) => `#${i + 1} ${s.name} (${s.score})`).join(' • ');
-      uiLB.textContent = `Global leaderboard: ${top}`;
-    }
-
-    function createLevel() {
-      state.blankets = [];
-      state.foods = [];
-      state.humans = [];
-      state.projectiles = [];
-
-      const lvl = levels[state.level];
-      const blanketsN = 8 + state.level * 2;
-      for (let i = 0; i < blanketsN; i++) {
-        const b = { x: rand(90, W - 150), y: rand(80, H - 110), w: rand(80, 130), h: rand(60, 90), color: `hsl(${rand(0, 360)},70%,${rand(60,78)}%)` };
-        state.blankets.push(b);
-
-        const foodCount = 1 + (Math.random() < 0.6 ? 1 : 0);
-        for (let f = 0; f < foodCount; f++) {
-          const base = pick(foodsBase);
-          state.foods.push({
-            x: b.x + rand(10, b.w - 10),
-            y: b.y + rand(10, b.h - 10),
-            r: 9,
-            kind: base.kind,
-            value: Math.round(base.value * lvl.foodMult),
-            color: base.color
-          });
-        }
-      }
-
-      const humanCount = 4 + state.level * 3;
-      const types = ['kid', 'dad', 'lifeguard'];
-      for (let i = 0; i < humanCount; i++) {
-        const t = types[(i + state.level) % types.length];
-        const isKid = t === 'kid';
-        const isDad = t === 'dad';
-        const isLife = t === 'lifeguard';
-        state.humans.push({
-          type: t,
-          x: rand(90, W - 90),
-          y: rand(90, H - 90),
-          vx: rand(-1, 1),
-          vy: rand(-1, 1),
-          speed: (isKid ? 70 : isDad ? 100 : 86) * lvl.humanMult,
-          range: (isKid ? 90 : isDad ? 130 : 170) * lvl.humanMult,
-          stunned: 0,
-          cooldown: 0
-        });
-      }
-
-      state.seagull.x = W * 0.2;
-      state.seagull.y = H * 0.5;
-    }
-
-    function startGame() {
-      state.running = true;
-      state.level = 0;
-      state.score = 0;
-      state.lives = 3;
-      state.timer = 60;
-      state.screamCd = 0;
-      state.invuln = 0;
-      createLevel();
-      panel.innerHTML = '<h1>🐦 Seagull Simulator</h1><p class="small">MINE! MINE! MINE!</p>';
-      overlay.classList.add('hidden');
-      setStatus('Beach is open. Commit crimes.');
-      updateHud();
-    }
-
-    function updateHud() {
-      uiLives.textContent = '❤️'.repeat(state.lives) + '🖤'.repeat(Math.max(0, 3 - state.lives));
-      uiScore.textContent = `Score: ${state.score}`;
-      uiLevel.textContent = `Level: ${state.level + 1} — ${levels[state.level].name}`;
-      uiTimer.textContent = `⏱ ${Math.ceil(state.timer)}`;
-      coolFill.style.width = `${Math.max(0, Math.min(100, (state.screamCd / 3) * 100))}%`;
-    }
-
-    function moveSeagull(dt) {
-      const s = state.seagull;
-      let dx = 0, dy = 0;
-      if (state.keys['ArrowLeft'] || state.keys['a']) dx -= 1;
-      if (state.keys['ArrowRight'] || state.keys['d']) dx += 1;
-      if (state.keys['ArrowUp'] || state.keys['w']) dy -= 1;
-      if (state.keys['ArrowDown'] || state.keys['s']) dy += 1;
-
-      if (state.pointer) {
-        const px = state.pointer.x - s.x;
-        const py = state.pointer.y - s.y;
-        const d = Math.hypot(px, py);
-        if (d > 8) {
-          dx = px / d;
-          dy = py / d;
-        }
-      }
-
-      const m = Math.hypot(dx, dy) || 1;
-      s.vx = (dx / m) * s.speed;
-      s.vy = (dy / m) * s.speed;
-
-      s.x += s.vx * dt;
-      s.y += s.vy * dt;
-      s.x = Math.max(12, Math.min(W - 12, s.x));
-      s.y = Math.max(12, Math.min(H - 12, s.y));
-    }
-
-    function useScream() {
-      if (state.screamCd > 0 || !state.running) return;
-      state.screamCd = 3;
-      state.shake = 0.25;
-      setStatus('MINE! MINE! MINE!');
-      sound('flap');
-
-      const s = state.seagull;
-      for (const h of state.humans) {
-        const d = Math.hypot(h.x - s.x, h.y - s.y);
-        if (d < 120) h.stunned = 1.5;
-      }
-    }
-
-    function grabFood() {
-      if (!state.running) return;
-      const s = state.seagull;
-      let best = -1;
-      let bestD = 99999;
-      for (let i = 0; i < state.foods.length; i++) {
-        const f = state.foods[i];
-        const d = Math.hypot(f.x - s.x, f.y - s.y);
-        if (d < 28 && d < bestD) { best = i; bestD = d; }
-      }
-      if (best >= 0) {
-        const f = state.foods.splice(best, 1)[0];
-        state.score += f.value;
-        state.floating.push({ x: s.x, y: s.y - 8, text: `+${f.value}`, t: 0.7, color: '#0d8a34' });
-        setStatus(pick(['NOOO MY FRIES!', 'HEY! THAT WAS MINE!', 'SEAGULL CRIME IN PROGRESS!']));
-        sound('grab');
-
-        if (state.score % 100 === 0) sound('milestone');
-      }
-    }
-
-    function hitSeagull(reason = 'Oof.') {
-      if (state.invuln > 0) return;
-      state.lives -= 1;
-      state.invuln = 1.2;
-      state.floating.push({ x: state.seagull.x, y: state.seagull.y - 10, text: '-1 ❤️', t: 0.8, color: '#c1121f' });
-      setStatus(reason);
-      sound('hit');
-      if (state.lives <= 0) gameOver();
-    }
-
-    function updateHumans(dt) {
-      const s = state.seagull;
-      for (const h of state.humans) {
-        if (h.stunned > 0) {
-          h.stunned -= dt;
-          h.cooldown -= dt;
-          continue;
-        }
-
-        const dx = s.x - h.x;
-        const dy = s.y - h.y;
-        const d = Math.hypot(dx, dy) || 1;
-
-        if (d < h.range) {
-          h.vx = dx / d;
-          h.vy = dy / d;
-
-          if (h.type === 'dad' && h.cooldown <= 0 && d < 180) {
-            h.cooldown = 2.4;
-            state.projectiles.push({ x: h.x, y: h.y, vx: (dx / d) * 220, vy: (dy / d) * 220, t: 2.1 });
-          }
-
-          if (h.type === 'lifeguard' && h.cooldown <= 0 && d < 150) {
-            h.cooldown = 3.2;
-            state.seagull.speed = 140;
-            setTimeout(() => { state.seagull.speed = 220; }, 900);
-            state.floating.push({ x: s.x, y: s.y - 12, text: 'WHISTLE STUN!', t: 0.7, color: '#264653' });
-          }
-        } else {
-          if (Math.random() < 0.02) {
-            h.vx = rand(-1, 1);
-            h.vy = rand(-1, 1);
-          }
-        }
-
-        const m = Math.hypot(h.vx, h.vy) || 1;
-        h.x += (h.vx / m) * h.speed * dt;
-        h.y += (h.vy / m) * h.speed * dt;
-        h.x = Math.max(14, Math.min(W - 14, h.x));
-        h.y = Math.max(14, Math.min(H - 14, h.y));
-
-        h.cooldown -= dt;
-
-        if (Math.hypot(h.x - s.x, h.y - s.y) < 20) {
-          hitSeagull('Caught by angry human!');
-        }
-      }
-    }
-
-    function updateProjectiles(dt) {
-      for (let i = state.projectiles.length - 1; i >= 0; i--) {
-        const p = state.projectiles[i];
-        p.x += p.vx * dt;
-        p.y += p.vy * dt;
-        p.t -= dt;
-        if (Math.hypot(p.x - state.seagull.x, p.y - state.seagull.y) < 14) {
-          hitSeagull('Flip flop to the face.');
-          state.projectiles.splice(i, 1);
-          continue;
-        }
-        if (p.t <= 0 || p.x < -20 || p.y < -20 || p.x > W + 20 || p.y > H + 20) state.projectiles.splice(i, 1);
-      }
-    }
-
-    function updateFloating(dt) {
-      for (let i = state.floating.length - 1; i >= 0; i--) {
-        const f = state.floating[i];
-        f.t -= dt;
-        f.y -= 24 * dt;
-        if (f.t <= 0) state.floating.splice(i, 1);
-      }
-    }
-
-    function checkProgress() {
-      const target = levels[state.level].threshold;
-      if (state.score >= target) {
-        if (state.level < levels.length - 1) {
-          state.level++;
-          state.timer = 60;
-          createLevel();
-          state.floating.push({ x: W / 2, y: 60, text: `LEVEL ${state.level + 1}!`, t: 1.4, color: '#264653' });
-          setStatus(`Welcome to ${levels[state.level].name}. It's worse.`);
-        } else {
-          gameOver(true);
-        }
-      }
-
-      if (state.foods.length < 8) {
-        // trickle spawns
-        const b = pick(state.blankets);
-        const base = pick(foodsBase);
-        const lvl = levels[state.level];
-        state.foods.push({ x: b.x + rand(8, b.w - 8), y: b.y + rand(8, b.h - 8), r: 9, kind: base.kind, value: Math.round(base.value * lvl.foodMult), color: base.color });
-      }
-    }
-
-    async function gameOver(win = false) {
-      state.running = false;
-      overlay.classList.remove('hidden');
-      const scoresRaw = await storageGet('seagull:scores');
-      const scores = scoresRaw ? JSON.parse(scoresRaw) : [];
-      const name = prompt('Name for leaderboard?', 'Anonymous Seagull') || 'Anonymous Seagull';
-      scores.push({ name, score: state.score, date: Date.now() });
-      scores.sort((a, b) => b.score - a.score);
-      const top = scores.slice(0, 20);
-      await storageSet('seagull:scores', JSON.stringify(top));
-      await storageSet('seagull:leaderboard', JSON.stringify(top), true);
-      state.leaderboard = top;
-      renderLeaderboardText();
-
-      const shareText = encodeURIComponent(`I stole ${state.score} points worth of beach food in Seagull Simulator 🐦`);
-      panel.innerHTML = `
-        <h1>${win ? '🏆 KING OF THE BOARDWALK' : '💥 GAME OVER'}</h1>
-        <p class="small">Final Score: <b>${state.score}</b></p>
-        <p class="small">${win ? 'You terrorized every level.' : 'The humans defended their snacks.'}</p>
-        <p class="small">Top 3: ${(top.slice(0, 3).map((s, i) => `#${i + 1} ${s.name} (${s.score})`).join(' • ') || 'none')}</p>
-        <button id="playAgain">Play Again</button>
-        <div style="margin-top:8px"><a href="https://twitter.com/intent/tweet?text=${shareText}" target="_blank">Share Score</a></div>
-      `;
-      document.getElementById('playAgain').onclick = () => startGame();
-    }
-
-    function drawBeach() {
-      ctx.fillStyle = '#63c6ff';
-      ctx.fillRect(0, 0, W, H * 0.24);
-      ctx.fillStyle = '#f5d17a';
-      ctx.fillRect(0, H * 0.24, W, H);
-
-      for (const b of state.blankets) {
-        ctx.fillStyle = b.color;
-        ctx.fillRect(b.x, b.y, b.w, b.h);
-      }
-    }
-
-    function drawFood(f) {
-      ctx.save();
-      ctx.translate(f.x, f.y);
-      if (f.kind === 'fries') {
-        ctx.fillStyle = '#ef4444';
-        ctx.fillRect(-8, -4, 16, 10);
-        ctx.fillStyle = '#fde047';
-        for (let i = -6; i <= 4; i += 4) ctx.fillRect(i, -10, 3, 6);
-      } else if (f.kind === 'hotdog') {
-        ctx.fillStyle = '#fbbf24';
-        ctx.fillRect(-10, -4, 20, 8);
-        ctx.fillStyle = '#b45309';
-        ctx.fillRect(-7, -2, 14, 4);
-      } else if (f.kind === 'icecream') {
-        ctx.fillStyle = '#d97706';
-        ctx.beginPath(); ctx.moveTo(0, 8); ctx.lineTo(-6, -1); ctx.lineTo(6, -1); ctx.closePath(); ctx.fill();
-        ctx.fillStyle = '#fef3c7';
-        ctx.beginPath(); ctx.arc(0, -6, 6, 0, Math.PI * 2); ctx.fill();
-      } else {
-        ctx.fillStyle = '#f59e0b';
-        ctx.beginPath(); ctx.moveTo(-10, 7); ctx.lineTo(10, 0); ctx.lineTo(-8, -8); ctx.closePath(); ctx.fill();
-      }
-      ctx.restore();
-    }
-
-    function drawSeagull() {
-      const s = state.seagull;
-      const ang = Math.atan2(s.vy, s.vx || 0.0001);
-      ctx.save();
-      ctx.translate(s.x, s.y);
-      ctx.rotate(ang);
-      if (state.invuln > 0 && (Date.now() / 80 | 0) % 2 === 0) ctx.globalAlpha = 0.4;
-      ctx.fillStyle = '#ffffff';
-      ctx.beginPath();
-      ctx.moveTo(14, 0);
-      ctx.lineTo(-12, -8);
-      ctx.lineTo(-6, 0);
-      ctx.lineTo(-12, 8);
-      ctx.closePath();
-      ctx.fill();
-      ctx.fillStyle = '#fb923c';
-      ctx.beginPath(); ctx.moveTo(14, 0); ctx.lineTo(21, 2); ctx.lineTo(14, 5); ctx.closePath(); ctx.fill();
-      ctx.restore();
-    }
-
-    function drawHuman(h) {
-      ctx.save();
-      ctx.translate(h.x, h.y);
-      if (h.stunned > 0) ctx.globalAlpha = 0.45;
-      ctx.fillStyle = h.type === 'kid' ? '#3b82f6' : h.type === 'dad' ? '#ef4444' : '#10b981';
-      ctx.beginPath(); ctx.arc(0, 0, 11, 0, Math.PI * 2); ctx.fill();
-      ctx.fillStyle = '#fff';
-      ctx.font = '10px system-ui';
-      ctx.textAlign = 'center';
-      ctx.fillText(h.type === 'kid' ? '👦' : h.type === 'dad' ? '👨' : '🏖️', 0, 4);
-      ctx.restore();
-    }
-
-    function drawProjectile(p) {
-      ctx.fillStyle = '#6b7280';
-      ctx.beginPath();
-      ctx.ellipse(p.x, p.y, 8, 4, Math.atan2(p.vy, p.vx), 0, Math.PI * 2);
-      ctx.fill();
-    }
-
-    function drawFloating() {
-      for (const f of state.floating) {
-        ctx.fillStyle = f.color;
-        ctx.globalAlpha = Math.max(0, Math.min(1, f.t / 0.7));
-        ctx.font = 'bold 18px system-ui';
-        ctx.fillText(f.text, f.x, f.y);
-      }
-      ctx.globalAlpha = 1;
-    }
-
-    let last = performance.now();
-    function frame(now) {
-      const dt = Math.min(0.033, (now - last) / 1000);
-      last = now;
-
-      if (state.running) {
-        state.timer -= dt;
-        state.screamCd = Math.max(0, state.screamCd - dt);
-        state.invuln = Math.max(0, state.invuln - dt);
-        state.shake = Math.max(0, state.shake - dt);
-
-        moveSeagull(dt);
-        updateHumans(dt);
-        updateProjectiles(dt);
-        updateFloating(dt);
-        checkProgress();
-
-        if (state.timer <= 0) {
-          if (state.score >= levels[state.level].threshold) {
-            if (state.level < levels.length - 1) {
-              state.level++;
-              state.timer = 60;
-              createLevel();
-            } else {
-              gameOver(true);
-            }
-          } else {
-            gameOver(false);
-          }
-        }
-      }
-
-      updateHud();
-
-      const sx = state.shake > 0 ? rand(-5, 5) : 0;
-      const sy = state.shake > 0 ? rand(-5, 5) : 0;
-      ctx.save();
-      ctx.translate(sx, sy);
-
-      drawBeach();
-      for (const f of state.foods) drawFood(f);
-      for (const h of state.humans) drawHuman(h);
-      for (const p of state.projectiles) drawProjectile(p);
-      drawSeagull();
-      drawFloating();
-
-      ctx.restore();
-      requestAnimationFrame(frame);
-    }
-
-    // input
-    window.addEventListener('keydown', (e) => {
-      state.keys[e.key] = true;
-      if (e.key === ' ' || e.code === 'Space') { e.preventDefault(); useScream(); }
-      if (e.key.toLowerCase() === 'e') grabFood();
-    }, { passive: false });
-    window.addEventListener('keyup', (e) => { state.keys[e.key] = false; });
-
-    cvs.addEventListener('pointerdown', (e) => {
-      const r = cvs.getBoundingClientRect();
-      const x = (e.clientX - r.left) * (W / r.width);
-      const y = (e.clientY - r.top) * (H / r.height);
-      state.pointer = { x, y };
+    const mat = new THREE.MeshPhongMaterial({
+      color: new THREE.Color().setHSL(0.28 + Math.random() * 0.08, 0.5 + Math.random() * 0.3, 0.25 + Math.random() * 0.15),
+      side: THREE.DoubleSide, flatShading: true, transparent: true, opacity: 0.8,
     });
-    cvs.addEventListener('pointermove', (e) => {
-      if (!state.pointer) return;
-      const r = cvs.getBoundingClientRect();
-      state.pointer.x = (e.clientX - r.left) * (W / r.width);
-      state.pointer.y = (e.clientY - r.top) * (H / r.height);
-    });
-    window.addEventListener('pointerup', () => { state.pointer = null; });
+    const blade = new THREE.Mesh(geo, mat);
+    blade.position.set((Math.random()-0.5)*worldSize*0.8, -3.5+h/2, (Math.random()-0.5)*worldSize*0.8);
+    blade.rotation.y = Math.random() * Math.PI * 2;
+    scene.add(blade);
+    seagrassBlades.push({ mesh: blade, baseRotZ: blade.rotation.z, phase: Math.random()*Math.PI*2, speed: 0.5+Math.random()*0.8 });
+  }
+}
 
-    screamBtn.addEventListener('click', useScream);
-    grabBtn.addEventListener('click', grabFood);
-    playAgainBtn.addEventListener('click', startGame);
-
-    // tap food to grab on mobile
-    cvs.addEventListener('click', (e) => {
-      const r = cvs.getBoundingClientRect();
-      const x = (e.clientX - r.left) * (W / r.width);
-      const y = (e.clientY - r.top) * (H / r.height);
-      for (const f of state.foods) {
-        if (Math.hypot(f.x - x, f.y - y) < 20) {
-          grabFood();
-          break;
-        }
+function buildCorals() {
+  const colors = [0xcc5566, 0xdd8844, 0xcc66aa, 0x66aacc, 0xddaa44, 0xaa55cc];
+  for (let i = 0; i < 40; i++) {
+    const type = Math.floor(Math.random() * 3);
+    const color = colors[Math.floor(Math.random() * colors.length)];
+    let mesh;
+    if (type === 0) {
+      const geo = new THREE.DodecahedronGeometry(0.8 + Math.random() * 1.2, 2);
+      geo.scale(1, 0.6, 1);
+      mesh = new THREE.Mesh(geo, new THREE.MeshPhongMaterial({ color, flatShading: true, shininess: 15 }));
+    } else if (type === 1) {
+      mesh = new THREE.Group();
+      for (let b = 0; b < 3 + Math.floor(Math.random() * 4); b++) {
+        const bGeo = new THREE.CylinderGeometry(0.06, 0.12, 1 + Math.random() * 2, 5);
+        const branch = new THREE.Mesh(bGeo, new THREE.MeshPhongMaterial({ color, flatShading: true }));
+        branch.position.y = branch.geometry.parameters.height / 2;
+        branch.rotation.x = (Math.random()-0.5)*0.6;
+        branch.rotation.z = (Math.random()-0.5)*0.6;
+        const tip = new THREE.Mesh(new THREE.SphereGeometry(0.12, 6, 6),
+          new THREE.MeshPhongMaterial({ color: new THREE.Color(color).multiplyScalar(1.3), flatShading: true }));
+        tip.position.y = branch.geometry.parameters.height;
+        branch.add(tip);
+        mesh.add(branch);
       }
-    });
+    } else {
+      const geo = new THREE.TorusGeometry(0.6 + Math.random() * 0.5, 0.15, 6, 12, Math.PI * 0.8);
+      mesh = new THREE.Mesh(geo, new THREE.MeshPhongMaterial({
+        color, flatShading: true, transparent: true, opacity: 0.7, side: THREE.DoubleSide,
+      }));
+      mesh.rotation.x = -Math.PI / 2 + (Math.random()-0.5)*0.4;
+    }
+    mesh.position.set((Math.random()-0.5)*worldSize*0.7, -4.5+Math.random()*0.5, (Math.random()-0.5)*worldSize*0.7);
+    mesh.rotation.y = Math.random() * Math.PI * 2;
+    scene.add(mesh);
+  }
+}
 
-    loadLeaderboard();
-    requestAnimationFrame(frame);
-  </script>
+function buildFish() {
+  const colors = [0xffaa44, 0x44aaff, 0xff6677, 0x44ddaa, 0xffdd44, 0xaa66ff];
+  for (let s = 0; s < 6; s++) {
+    const center = new THREE.Vector3((Math.random()-0.5)*worldSize*0.5, 2+Math.random()*15, (Math.random()-0.5)*worldSize*0.5);
+    const color = colors[s % colors.length];
+    const school = [];
+    for (let f = 0; f < 8; f++) {
+      const fg = new THREE.Group();
+      const sz = 0.2 + Math.random() * 0.3;
+      const bGeo = new THREE.SphereGeometry(sz, 6, 5);
+      bGeo.scale(2, 0.8, 1);
+      fg.add(new THREE.Mesh(bGeo, new THREE.MeshPhongMaterial({ color, flatShading: true, shininess: 30 })));
+      const tGeo = new THREE.ConeGeometry(sz * 0.6, sz * 1.2, 4);
+      tGeo.rotateZ(Math.PI / 2);
+      const tail = new THREE.Mesh(tGeo, new THREE.MeshPhongMaterial({
+        color: new THREE.Color(color).multiplyScalar(0.8), flatShading: true,
+      }));
+      tail.position.x = -sz * 1.8;
+      tail.name = 'fishTail';
+      fg.add(tail);
+      const eGeo = new THREE.SphereGeometry(sz * 0.15, 4, 4);
+      const eMat = new THREE.MeshPhongMaterial({ color: 0x111111 });
+      const e1 = new THREE.Mesh(eGeo, eMat);
+      e1.position.set(sz * 1.2, sz * 0.15, sz * 0.5);
+      fg.add(e1);
+      const e2 = e1.clone();
+      e2.position.z = -sz * 0.5;
+      fg.add(e2);
+      fg.position.copy(center).add(new THREE.Vector3((Math.random()-0.5)*5,(Math.random()-0.5)*3,(Math.random()-0.5)*5));
+      fg.scale.setScalar(0.8 + Math.random() * 0.4);
+      scene.add(fg);
+      school.push({
+        mesh: fg, velocity: new THREE.Vector3((Math.random()-0.5)*0.5,0,(Math.random()-0.5)*0.5),
+        center: center.clone(), phase: Math.random() * Math.PI * 2,
+      });
+    }
+    fishGroups.push(school);
+  }
+}
+
+function buildJellyfish() {
+  const colors = [0xaa66dd, 0xdd66aa, 0x66aadd, 0xddaa66, 0x66ddaa];
+  for (let i = 0; i < 8; i++) {
+    const size = 0.5 + Math.random();
+    const color = colors[i % colors.length];
+    const g = new THREE.Group();
+    const bellGeo = new THREE.SphereGeometry(size, 12, 8, 0, Math.PI * 2, 0, Math.PI * 0.6);
+    const bell = new THREE.Mesh(bellGeo, new THREE.MeshPhongMaterial({
+      color, transparent: true, opacity: 0.4, side: THREE.DoubleSide, shininess: 40,
+      emissive: new THREE.Color(color).multiplyScalar(0.15),
+    }));
+    bell.name = 'bell';
+    g.add(bell);
+    const inner = new THREE.Mesh(new THREE.SphereGeometry(size * 0.6, 8, 6),
+      new THREE.MeshPhongMaterial({ color, transparent: true, opacity: 0.15, emissive: new THREE.Color(color).multiplyScalar(0.3) }));
+    inner.position.y = -size * 0.1;
+    g.add(inner);
+    for (let t = 0; t < 6; t++) {
+      const tLen = size * 2 + Math.random() * size * 2;
+      const tent = new THREE.Mesh(new THREE.CylinderGeometry(0.02, 0.01, tLen, 3),
+        new THREE.MeshPhongMaterial({ color, transparent: true, opacity: 0.25 }));
+      const a = (t / 6) * Math.PI * 2;
+      tent.position.set(Math.cos(a)*size*0.4, -tLen/2-size*0.3, Math.sin(a)*size*0.4);
+      tent.name = 'tentacle';
+      g.add(tent);
+    }
+    g.add(new THREE.PointLight(color, 0.3, 8));
+    g.position.set((Math.random()-0.5)*worldSize*0.5, 5+Math.random()*20, (Math.random()-0.5)*worldSize*0.5);
+    scene.add(g);
+    jellyfishList.push({
+      mesh: g, size, phase: Math.random()*Math.PI*2,
+      pulseSpeed: 0.8+Math.random()*0.6,
+      driftVel: new THREE.Vector3((Math.random()-0.5)*0.1, 0.05+Math.random()*0.05, (Math.random()-0.5)*0.1),
+    });
+  }
+}
+
+function buildLightShafts() {
+  for (let i = 0; i < 8; i++) {
+    const w = 3 + Math.random() * 8;
+    const mat = new THREE.MeshBasicMaterial({
+      color: 0x88ccaa, transparent: true, opacity: 0.02 + Math.random() * 0.03,
+      side: THREE.DoubleSide, depthWrite: false,
+    });
+    const shaft = new THREE.Mesh(new THREE.PlaneGeometry(w, 50), mat);
+    shaft.position.set((Math.random()-0.5)*worldSize*0.4, 15, (Math.random()-0.5)*worldSize*0.4);
+    shaft.rotation.y = Math.random() * Math.PI;
+    scene.add(shaft);
+    lightShafts.push({ mesh: shaft, baseOpacity: mat.opacity, phase: Math.random()*Math.PI*2 });
+  }
+}
+
+let waterSurface;
+function buildWaterSurface() {
+  const geo = new THREE.PlaneGeometry(worldSize * 2, worldSize * 2, 60, 60);
+  geo.rotateX(-Math.PI / 2);
+  waterSurface = new THREE.Mesh(geo, new THREE.MeshPhongMaterial({
+    color: 0x1a6b7a, transparent: true, opacity: 0.25, side: THREE.DoubleSide, shininess: 80, specular: 0x88ccaa,
+  }));
+  waterSurface.position.y = 28;
+  scene.add(waterSurface);
+}
+
+function buildParticles() {
+  const count = 500;
+  const positions = new Float32Array(count * 3);
+  for (let i = 0; i < count; i++) {
+    positions[i*3] = (Math.random()-0.5)*worldSize*0.6;
+    positions[i*3+1] = Math.random()*30-3;
+    positions[i*3+2] = (Math.random()-0.5)*worldSize*0.6;
+  }
+  const geo = new THREE.BufferGeometry();
+  geo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+  const pts = new THREE.Points(geo, new THREE.PointsMaterial({
+    color: 0xaaddcc, size: 0.08, transparent: true, opacity: 0.4, sizeAttenuation: true,
+  }));
+  scene.add(pts);
+  particleList.push({ mesh: pts, positions });
+}
+
+function setupInput() {
+  document.addEventListener('keydown', e => { keys[e.code] = true; });
+  document.addEventListener('keyup', e => { keys[e.code] = false; });
+  renderer.domElement.addEventListener('click', () => {
+    if (started && !isMobile) renderer.domElement.requestPointerLock();
+  });
+  document.addEventListener('pointerlockchange', () => {
+    isPointerLocked = document.pointerLockElement === renderer.domElement;
+  });
+  document.addEventListener('mousemove', e => {
+    if (isPointerLocked) {
+      cameraAngleH -= e.movementX * 0.002;
+      cameraAngleV = Math.max(-0.6, Math.min(0.8, cameraAngleV - e.movementY * 0.002));
+    }
+  });
+  document.addEventListener('wheel', e => {
+    cameraDist = Math.max(5, Math.min(25, cameraDist + e.deltaY * 0.01));
+  });
+
+  const base = document.getElementById('joystick-base');
+  const thumb = document.getElementById('joystick-thumb');
+  if (base) {
+    const onTouch = e => { e.preventDefault(); joystickActive = true; updateJoystick(e.touches[0], base, thumb); };
+    base.addEventListener('touchstart', onTouch, { passive: false });
+    base.addEventListener('touchmove', e => { e.preventDefault(); if (joystickActive) updateJoystick(e.touches[0], base, thumb); }, { passive: false });
+    base.addEventListener('touchend', () => { joystickActive = false; joystickDX = 0; joystickDZ = 0; thumb.style.left = '40px'; thumb.style.top = '40px'; });
+  }
+  document.addEventListener('touchstart', e => {
+    for (const t of e.touches) { if (t.clientX > window.innerWidth * 0.4 && touchLookId === null) { touchLookId = t.identifier; touchLookStartX = t.clientX; touchLookStartY = t.clientY; } }
+  });
+  document.addEventListener('touchmove', e => {
+    for (const t of e.changedTouches) {
+      if (t.identifier === touchLookId) {
+        cameraAngleH -= (t.clientX - touchLookStartX) * 0.003;
+        cameraAngleV = Math.max(-0.6, Math.min(0.8, cameraAngleV - (t.clientY - touchLookStartY) * 0.003));
+        touchLookStartX = t.clientX; touchLookStartY = t.clientY;
+      }
+    }
+  });
+  document.addEventListener('touchend', e => { for (const t of e.changedTouches) { if (t.identifier === touchLookId) touchLookId = null; } });
+}
+
+function updateJoystick(touch, base, thumb) {
+  const rect = base.getBoundingClientRect();
+  let dx = touch.clientX - (rect.left + rect.width/2);
+  let dy = touch.clientY - (rect.top + rect.height/2);
+  const dist = Math.sqrt(dx*dx+dy*dy);
+  if (dist > 40) { dx = dx/dist*40; dy = dy/dist*40; }
+  thumb.style.left = (40+dx)+'px'; thumb.style.top = (40+dy)+'px';
+  joystickDX = dx/40; joystickDZ = dy/40;
+}
+
+function showMood() {
+  const el = document.getElementById('mood-text');
+  el.textContent = moods[Math.floor(Math.random() * moods.length)];
+  el.classList.add('visible');
+  setTimeout(() => el.classList.remove('visible'), 5000);
+  setTimeout(showMood, 8000 + Math.random() * 15000);
+}
+
+function spawnBubble(x, y, z) {
+  const b = new THREE.Mesh(new THREE.SphereGeometry(0.03+Math.random()*0.06, 5, 5),
+    new THREE.MeshPhongMaterial({ color: 0xaaddcc, transparent: true, opacity: 0.3, shininess: 60 }));
+  b.position.set(x, y, z);
+  scene.add(b);
+  bubbleList.push({ mesh: b, life: 150+Math.random()*150, vy: 0.02+Math.random()*0.03, vx: (Math.random()-0.5)*0.01, vz: (Math.random()-0.5)*0.01 });
+}
+
+function update(dt) {
+  const t = clock.getElapsedTime();
+  const forward = new THREE.Vector3(-Math.sin(cameraAngleH), 0, -Math.cos(cameraAngleH));
+  const right = new THREE.Vector3(-Math.cos(cameraAngleH), 0, Math.sin(cameraAngleH));
+  let mx = 0, mz = 0, my = 0;
+  if (keys['KeyW']||keys['ArrowUp']) { mx += forward.x; mz += forward.z; }
+  if (keys['KeyS']||keys['ArrowDown']) { mx -= forward.x; mz -= forward.z; }
+  if (keys['KeyA']||keys['ArrowLeft']) { mx += right.x; mz += right.z; }
+  if (keys['KeyD']||keys['ArrowRight']) { mx -= right.x; mz -= right.z; }
+  if (keys['Space']) my += 1;
+  if (keys['ShiftLeft']||keys['ShiftRight']) my -= 1;
+  if (joystickActive) { mx += forward.x*-joystickDZ+right.x*joystickDX; mz += forward.z*-joystickDZ+right.z*joystickDX; }
+
+  const speed = 6 * dt;
+  manateeGroup.position.x += mx * speed;
+  manateeGroup.position.z += mz * speed;
+  manateeGroup.position.y = Math.max(-3, Math.min(25, manateeGroup.position.y + my * speed * 0.6));
+  manateeGroup.position.y += Math.sin(t * 0.8) * 0.005;
+
+  if (Math.abs(mx) > 0.01 || Math.abs(mz) > 0.01) {
+    const target = Math.atan2(mx, mz);
+    let diff = target - manateeGroup.rotation.y;
+    while (diff > Math.PI) diff -= Math.PI*2;
+    while (diff < -Math.PI) diff += Math.PI*2;
+    manateeGroup.rotation.y += diff * 3 * dt;
+  }
+
+  // Animate parts
+  const tail = manateeGroup.getObjectByName('tail');
+  if (tail) { tail.rotation.y = Math.sin(t*2)*0.25; tail.position.x = -3+Math.sin(t*2)*0.1; }
+  const tc = manateeGroup.getObjectByName('tailConn');
+  if (tc) tc.rotation.y = Math.sin(t*2+0.5)*0.1;
+  const fL = manateeGroup.getObjectByName('flipperL');
+  const fR = manateeGroup.getObjectByName('flipperR');
+  if (fL) fL.rotation.z = -0.4+Math.sin(t*1.5)*0.15;
+  if (fR) fR.rotation.z = 0.4-Math.sin(t*1.5+1)*0.15;
+
+  if (Math.random() < 0.03) {
+    const np = new THREE.Vector3(2.2, 0.1, 0).applyQuaternion(manateeGroup.quaternion).add(manateeGroup.position);
+    spawnBubble(np.x, np.y, np.z);
+  }
+
+  // Camera
+  const co = new THREE.Vector3(
+    Math.sin(cameraAngleH)*Math.cos(cameraAngleV)*cameraDist,
+    Math.sin(cameraAngleV)*cameraDist+2,
+    Math.cos(cameraAngleH)*Math.cos(cameraAngleV)*cameraDist
+  );
+  camera.position.lerp(manateeGroup.position.clone().add(co), 3*dt);
+  camera.lookAt(manateeGroup.position.clone().add(new THREE.Vector3(0,0.5,0)));
+
+  // Seagrass
+  seagrassBlades.forEach(g => { g.mesh.rotation.z = g.baseRotZ + Math.sin(t*g.speed+g.phase)*0.15; });
+
+  // Fish
+  fishGroups.forEach(school => school.forEach(f => {
+    f.velocity.add(f.center.clone().sub(f.mesh.position).multiplyScalar(0.002));
+    const tm = f.mesh.position.clone().sub(manateeGroup.position);
+    if (tm.length() < 8) f.velocity.add(tm.normalize().multiplyScalar(0.05));
+    f.velocity.x += (Math.random()-0.5)*0.005;
+    f.velocity.z += (Math.random()-0.5)*0.005;
+    f.velocity.multiplyScalar(0.99).clampLength(0, 0.3);
+    f.mesh.position.add(f.velocity);
+    if (f.velocity.length() > 0.01) f.mesh.rotation.y = Math.atan2(f.velocity.x, f.velocity.z);
+    const ft = f.mesh.getObjectByName('fishTail');
+    if (ft) ft.rotation.y = Math.sin(t*6+f.phase)*0.3;
+  }));
+
+  // Jellyfish
+  jellyfishList.forEach(j => {
+    j.mesh.position.add(j.driftVel.clone().multiplyScalar(dt));
+    j.mesh.position.y += Math.sin(t*0.5+j.phase)*0.01;
+    const bell = j.mesh.getObjectByName('bell');
+    const p = Math.sin(t*j.pulseSpeed+j.phase);
+    if (bell) { bell.scale.x = 1+p*0.15; bell.scale.z = 1+p*0.15; bell.scale.y = 1-p*0.1; }
+    j.mesh.children.forEach(c => { if (c.name==='tentacle') { c.rotation.x=Math.sin(t*1.2+j.phase)*0.15; c.rotation.z=Math.sin(t*0.8+j.phase+1)*0.1; }});
+    if (j.mesh.position.y > 30) j.mesh.position.y = -2;
+    if (Math.abs(j.mesh.position.x) > worldSize*0.4) j.driftVel.x *= -1;
+    if (Math.abs(j.mesh.position.z) > worldSize*0.4) j.driftVel.z *= -1;
+  });
+
+  // Light shafts
+  lightShafts.forEach(ls => { ls.mesh.material.opacity = ls.baseOpacity*(0.5+Math.sin(t*0.3+ls.phase)*0.5); });
+
+  // Water surface
+  if (waterSurface) {
+    const wp = waterSurface.geometry.attributes.position;
+    for (let i = 0; i < wp.count; i++) {
+      wp.setY(i, Math.sin(wp.getX(i)*0.05+t*0.5)*0.5+Math.cos(wp.getZ(i)*0.07+t*0.3)*0.4);
+    }
+    wp.needsUpdate = true;
+  }
+
+  // Bubbles
+  for (let i = bubbleList.length-1; i >= 0; i--) {
+    const b = bubbleList[i];
+    b.mesh.position.y += b.vy;
+    b.mesh.position.x += b.vx+Math.sin(t*3+i)*0.002;
+    b.mesh.position.z += b.vz;
+    b.life--;
+    b.mesh.material.opacity *= 0.998;
+    if (b.life <= 0) { scene.remove(b.mesh); b.mesh.geometry.dispose(); b.mesh.material.dispose(); bubbleList.splice(i,1); }
+  }
+
+  // Particles drift
+  particleList.forEach(p => {
+    const pos = p.mesh.geometry.attributes.position;
+    for (let i = 0; i < pos.count; i++) {
+      let y = pos.getY(i)+0.003;
+      if (y > 28) y = -3;
+      pos.setY(i, y);
+    }
+    pos.needsUpdate = true;
+  });
+}
+
+function animate() {
+  requestAnimationFrame(animate);
+  if (!started) return;
+  update(Math.min(clock.getDelta(), 0.05));
+  renderer.render(scene, camera);
+}
+
+function startGame() {
+  if (started) return;
+  started = true;
+  document.getElementById('title-screen').classList.add('hidden');
+  setTimeout(() => document.getElementById('controls-hint').style.opacity='0', 5000);
+}
+
+window.addEventListener('resize', () => {
+  camera.aspect = window.innerWidth/window.innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(window.innerWidth, window.innerHeight);
+});
+
+init();
+animate();
+</script>
 </body>
 </html>
