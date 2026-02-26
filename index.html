@@ -86,7 +86,7 @@ S.add(new THREE.HemisphereLight(0x88ccaa,0x224433,.4));
 const pt=new THREE.PointLight(0x66ddbb,.5,80);pt.position.set(0,30,0);S.add(pt);
 mkManatee();mkFloor();mkGrass();mkKelp();mkCoral();mkFish();mkJelly();mkWhale();mkShark();mkSmall();mkTurtle();mkShafts();mkWater();mkParticles();mkSigns();
 M.position.set(0,8,0);
-M.visible=false; // first-person mode
+M.visible=true;
 input();showMood();
 }
 
@@ -361,15 +361,16 @@ const tc=M.getObjectByName('tc');if(tc)tc.rotation.y=Math.sin(t*2.2+.5)*.12;
 const fl=M.getObjectByName('fl'),fr=M.getObjectByName('fr');
 if(fl)fl.rotation.z=-.4+Math.sin(t*1.6)*.15;if(fr)fr.rotation.z=.4-Math.sin(t*1.6+1)*.15;
 if(Math.random()<.035){const np=new THREE.Vector3(2.2,.1,0).applyQuaternion(M.quaternion).add(M.position);spB(np.x,np.y,np.z)}
-// First-person camera
-const camPos=M.position.clone().add(new THREE.Vector3(0,0.95,0));
-const lookDir=new THREE.Vector3(
-  -Math.sin(cH)*Math.cos(cV),
-  Math.sin(cV),
-  -Math.cos(cH)*Math.cos(cV)
-).normalize();
-const lookTarget=camPos.clone().add(lookDir.multiplyScalar(14));
-C.position.lerp(camPos,8*dt);
+// Over-shoulder third-person camera
+const followDist = Math.max(7, Math.min(14, cD));
+const camOffset = new THREE.Vector3(
+  Math.sin(cH) * Math.cos(cV) * followDist,
+  2.8 + Math.sin(cV) * 2.2,
+  Math.cos(cH) * Math.cos(cV) * followDist
+);
+const camPos = M.position.clone().add(camOffset);
+const lookTarget = M.position.clone().add(new THREE.Vector3(0, 0.75, 0));
+C.position.lerp(camPos, 5 * dt);
 C.lookAt(lookTarget);
 document.getElementById('dep').textContent='depth: '+Math.max(0,Math.round(26-M.position.y))+'m';
 // Grass
