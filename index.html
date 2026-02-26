@@ -162,34 +162,101 @@ JE.push({m:jg,sz,ph:Math.random()*6.28,ps:.7+Math.random()*.6,v:new THREE.Vector
 
 function mkWhale(){
 const g=new THREE.Group();
-const bodyMat=new THREE.MeshPhongMaterial({color:0x4a6175,shininess:35,specular:0x93b3c8});
-const bellyMat=new THREE.MeshPhongMaterial({color:0x8ea6b3,shininess:20});
-let geo=new THREE.SphereGeometry(1,24,16);geo.scale(6.2,2.2,2.4);g.add(new THREE.Mesh(geo,bodyMat));
-geo=new THREE.SphereGeometry(1,18,12);geo.scale(4.2,1.2,1.6);const bl=new THREE.Mesh(geo,bellyMat);bl.position.set(1,-0.9,0);g.add(bl);
-// head
-geo=new THREE.SphereGeometry(1,16,12);geo.scale(1.9,1.2,1.25);const hd=new THREE.Mesh(geo,bodyMat);hd.position.set(5.2,0.2,0);g.add(hd);
-// jaw line
-geo=new THREE.SphereGeometry(.8,14,10);geo.scale(1.8,.65,1.05);const jw=new THREE.Mesh(geo,bellyMat);jw.position.set(5.8,-0.55,0);g.add(jw);
-// tail stock + fluke
-geo=new THREE.SphereGeometry(1,12,10);geo.scale(2.4,.9,1.1);const tc=new THREE.Mesh(geo,bodyMat);tc.position.set(-5.1,0,0);tc.name='wtc';g.add(tc);
-const fluke=new THREE.Mesh(new THREE.BoxGeometry(2.9,.25,4.2),new THREE.MeshPhongMaterial({color:0x3f556a,shininess:18}));
-fluke.position.set(-7.4,0,0);fluke.name='wt';g.add(fluke);
-// dorsal + side fins
-const df=new THREE.Mesh(new THREE.ConeGeometry(.55,2.2,6),new THREE.MeshPhongMaterial({color:0x445a6c,flatShading:true}));
-df.position.set(-0.6,1.85,0);df.rotation.z=.2;g.add(df);
-[-1,1].forEach(s=>{
-  const pf=new THREE.Mesh(new THREE.BoxGeometry(1.6,.2,1),new THREE.MeshPhongMaterial({color:0x4b6274,shininess:15}));
-  pf.position.set(1.7,-1.25,s*2.15);pf.rotation.x=s*.25;pf.rotation.z=s*.15;g.add(pf);
-});
-[-1,1].forEach(s=>{const e=new THREE.Mesh(new THREE.SphereGeometry(.13,8,8),new THREE.MeshPhongMaterial({color:0x111122,shininess:80}));e.position.set(5.9,.35,s*1.35);g.add(e)});
-// freckles for detail
-for(let i=0;i<22;i++){
-  const sp=new THREE.Mesh(new THREE.SphereGeometry(.05+Math.random()*.05,5,5),new THREE.MeshPhongMaterial({color:0x384c5c,flatShading:true}));
-  sp.position.set(2.4+Math.random()*2.8,-0.15-Math.random()*0.9,(Math.random()-.5)*2.4);
-  g.add(sp);
+
+// Blue-whale style gradient using layered body meshes
+const bodyDeep = new THREE.MeshPhongMaterial({ color:0x2f516c, shininess:52, specular:0xa7d9ff });
+const bodyMid  = new THREE.MeshPhongMaterial({ color:0x3f6b87, shininess:46, specular:0x9cc9ea });
+const bodyLight= new THREE.MeshPhongMaterial({ color:0x7f9eb1, shininess:26, specular:0x7da4bb });
+const bellyMat = new THREE.MeshPhongMaterial({ color:0xc7d6df, shininess:18 });
+
+let geo;
+
+// main torso
+geo=new THREE.SphereGeometry(1,42,28); geo.scale(10.8,2.6,3.0);
+const torso=new THREE.Mesh(geo,bodyDeep); g.add(torso);
+
+// dorsal highlight strip for depth
+geo=new THREE.SphereGeometry(1,30,20); geo.scale(10.5,1.25,2.25);
+const dorsalStrip=new THREE.Mesh(geo,bodyMid); dorsalStrip.position.set(-0.2,1.0,0); g.add(dorsalStrip);
+
+// belly line (ventral side)
+geo=new THREE.SphereGeometry(1,28,18); geo.scale(8.2,1.2,2.1);
+const belly=new THREE.Mesh(geo,bellyMat); belly.position.set(1.2,-1.2,0); g.add(belly);
+
+// throat pleat effect (grooves)
+for(let i=0;i<12;i++){
+  const groove=new THREE.Mesh(new THREE.CylinderGeometry(0.05,0.05,6.9,6), new THREE.MeshPhongMaterial({color:0x9eb3bf,shininess:8}));
+  groove.rotation.z=Math.PI/2;
+  groove.position.set(4.8,-1.35,(i-5.5)*0.24);
+  g.add(groove);
 }
-g.scale.set(1.35,1.35,1.35);g.position.set(60,20,-40);S.add(g);
-CR.push({m:g,type:'w',a:0,r:55,sp:.08,cy:18})}
+
+// head + rostrum
+geo=new THREE.SphereGeometry(1,34,24); geo.scale(3.2,1.75,2.2);
+const head=new THREE.Mesh(geo,bodyDeep); head.position.set(9.3,0.26,0); g.add(head);
+geo=new THREE.SphereGeometry(1,26,16); geo.scale(2.15,0.95,1.55);
+const rostrum=new THREE.Mesh(geo,bodyMid); rostrum.position.set(11.7,0.22,0); g.add(rostrum);
+
+// jaw mass
+geo=new THREE.SphereGeometry(1,24,14); geo.scale(2.7,0.95,1.65);
+const jaw=new THREE.Mesh(geo,bodyLight); jaw.position.set(10.5,-0.85,0); g.add(jaw);
+
+// blowholes
+[-1,1].forEach(s=>{
+  const bh=new THREE.Mesh(new THREE.SphereGeometry(0.12,8,8), new THREE.MeshPhongMaterial({color:0x163042,shininess:4}));
+  bh.position.set(10.5,0.92,s*0.26); g.add(bh);
+});
+
+// eyes
+[-1,1].forEach(s=>{
+  const eye=new THREE.Mesh(new THREE.SphereGeometry(0.16,10,10), new THREE.MeshPhongMaterial({color:0x0f1116,shininess:90}));
+  eye.position.set(10.8,0.08,s*1.52); g.add(eye);
+});
+
+// pectoral fins
+[-1,1].forEach(s=>{
+  const fin=new THREE.Mesh(new THREE.BoxGeometry(4.6,0.22,1.35), new THREE.MeshPhongMaterial({color:0x355971,shininess:20}));
+  fin.position.set(3.7,-1.65,s*2.75);
+  fin.rotation.x=s*0.12;
+  fin.rotation.z=s*0.28;
+  g.add(fin);
+});
+
+// tiny dorsal fin (blue whales have small dorsal fin far back)
+const dorsal=new THREE.Mesh(new THREE.ConeGeometry(0.35,1.0,8), new THREE.MeshPhongMaterial({color:0x2a465a,flatShading:true}));
+dorsal.position.set(-5.8,1.55,0); dorsal.rotation.z=0.08; g.add(dorsal);
+
+// tail stock + fluke
+geo=new THREE.SphereGeometry(1,24,18); geo.scale(4.4,1.05,1.45);
+const tailStock=new THREE.Mesh(geo,bodyDeep); tailStock.position.set(-9.1,0,0); tailStock.name='wtc'; g.add(tailStock);
+
+const flukeCenter=new THREE.Group(); flukeCenter.position.set(-13.7,0,0); flukeCenter.name='wt';
+const flukeMat=new THREE.MeshPhongMaterial({color:0x29495f,shininess:24,specular:0x7ea5bd});
+const leftFluke=new THREE.Mesh(new THREE.BoxGeometry(3.8,0.22,4.7),flukeMat);
+leftFluke.position.set(0.9,0,2.25); leftFluke.rotation.y=0.18; leftFluke.rotation.x=0.05;
+const rightFluke=leftFluke.clone(); rightFluke.position.z=-2.25; rightFluke.rotation.y=-0.18;
+flukeCenter.add(leftFluke); flukeCenter.add(rightFluke); g.add(flukeCenter);
+
+// mottled skin detail (adds WOW-factor texture without images)
+for(let i=0;i<80;i++){
+  const speck=new THREE.Mesh(new THREE.SphereGeometry(0.07+Math.random()*0.09,6,6), new THREE.MeshPhongMaterial({
+    color: i%3===0 ? 0x86a5b8 : 0x2a4558,
+    transparent:true,
+    opacity: 0.55,
+    shininess: 10
+  }));
+  speck.position.set(
+    -7 + Math.random()*18,
+    -0.9 + Math.random()*2.25,
+    (Math.random()-0.5)*4.9
+  );
+  g.add(speck);
+}
+
+g.scale.set(1.55,1.55,1.55); // much bigger than manatee
+g.position.set(78,22,-58);
+S.add(g);
+CR.push({m:g,type:'w',a:0,r:78,sp:.065,cy:22})}
 
 function mkShark(){
 const g=new THREE.Group();let geo=new THREE.SphereGeometry(1,10,8);geo.scale(2.5,.8,.7);g.add(new THREE.Mesh(geo,new THREE.MeshPhongMaterial({color:0x556677,shininess:20})));
@@ -313,7 +380,19 @@ FI.forEach(sc=>sc.forEach(f=>{f.v.add(f.ct.clone().sub(f.m.position).multiplySca
 JE.forEach(j=>{const tm=j.m.position.clone().sub(M.position);const md2=tm.length();if(md2<6){j.v.add(tm.normalize().multiplyScalar(.03*(1-md2/6)));j.ps=Math.min(2,j.ps+dt*2)}else j.ps+=(.7-j.ps)*.01;j.m.position.add(j.v.clone().multiplyScalar(dt*30));j.v.multiplyScalar(.98);j.m.position.y+=Math.sin(t*.5+j.ph)*.008;const bl=j.m.getObjectByName('bl');const p=Math.sin(t*j.ps+j.ph);if(bl){bl.scale.x=1+p*.18;bl.scale.z=1+p*.18;bl.scale.y=1-p*.12}j.m.children.forEach(c=>{if(c.name==='tn'){c.rotation.x=Math.sin(t*1.3+j.ph)*.18;c.rotation.z=Math.sin(t*.9+j.ph+1)*.12}});if(j.m.position.y>28)j.v.y-=.01;if(j.m.position.y<-2)j.v.y+=.01;if(Math.abs(j.m.position.x)>100)j.v.x*=-1;if(Math.abs(j.m.position.z)>100)j.v.z*=-1});
 // Creatures
 CR.forEach(c=>{
-if(c.type==='w'){c.a+=c.sp*dt;c.m.position.set(Math.cos(c.a)*c.r,c.cy+Math.sin(t*.3)*2,Math.sin(c.a)*c.r);c.m.rotation.y=c.a+Math.PI/2;const w=c.m.getObjectByName('wt');if(w)w.rotation.y=Math.sin(t*1.5)*.2;if(M.position.distanceTo(c.m.position)<20&&!disc.has('whale')){disc.add('whale');showDisc('🐋 You found the whale! She says hi.')}}
+if(c.type==='w'){
+  c.a+=c.sp*dt;
+  c.m.position.set(Math.cos(c.a)*c.r,c.cy+Math.sin(t*.22)*2.8,Math.sin(c.a)*c.r);
+  c.m.rotation.y=c.a+Math.PI/2;
+  const w=c.m.getObjectByName('wt');
+  const ws=c.m.getObjectByName('wtc');
+  if(w) w.rotation.y=Math.sin(t*1.2)*0.3;
+  if(ws) ws.rotation.y=Math.sin(t*1.2+0.6)*0.12;
+  if(M.position.distanceTo(c.m.position)<26&&!disc.has('whale')){
+    disc.add('whale');
+    showDisc('🐋 BLUE WHALE SIGHTING — absolute unit detected.');
+  }
+}
 if(c.type==='s'){c.a+=c.sp*dt;c.m.position.set(Math.cos(c.a)*c.r+10,c.cy+Math.sin(t*.5)*1.5,Math.sin(c.a)*c.r-10);c.m.rotation.y=c.a+Math.PI/2;const s=c.m.getObjectByName('st');if(s)s.rotation.y=Math.sin(t*3)*.15;if(M.position.distanceTo(c.m.position)<12&&!disc.has('shark')){disc.add('shark');showDisc('🦈 The shark is more scared of you tbh')}}
 if(c.type==='tu'){c.a+=c.sp*dt;c.m.position.set(c.cx+Math.cos(c.a)*c.r,c.cy+Math.sin(t*.4+c.a)*.5,c.cz+Math.sin(c.a)*c.r);c.m.rotation.y=c.a+Math.PI/2;c.m.children.forEach(ch=>{if(ch.name==='tf')ch.rotation.z=Math.sin(t*2+c.a)*.2})}
 if(c.type==='sh'||c.type==='lb'){c.m.position.add(c.v);if(Math.random()<.01)c.v.set((Math.random()-.5)*.03,0,(Math.random()-.5)*.03);const d=c.m.position.distanceTo(M.position);if(d<5)c.v.add(c.m.position.clone().sub(M.position).normalize().multiplyScalar(.04));c.v.multiplyScalar(.96);if(c.v.length()>.005)c.m.rotation.y=Math.atan2(c.v.x,c.v.z);if(c.type==='lb')c.m.children.forEach(ch=>{if(ch.name==='lc')ch.rotation.z=Math.sin(t*2+c.ph)*.3})}});
