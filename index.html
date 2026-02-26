@@ -217,7 +217,13 @@ function mkSigns(){
 eggs.forEach((e,i)=>{const g=new THREE.Group();
 g.add(new THREE.Mesh(new THREE.CylinderGeometry(.04,.04,1.5,5),new THREE.MeshPhongMaterial({color:0x8a7a5a,flatShading:true})));
 const cv=document.createElement('canvas');cv.width=512;cv.height=128;const cx=cv.getContext('2d');
-cx.fillStyle='rgba(60,50,30,0.85)';cx.beginPath();cx.roundRect(4,4,504,120,12);cx.fill();
+cx.fillStyle='rgba(60,50,30,0.85)';cx.beginPath();
+if (typeof cx.roundRect === 'function') {
+  cx.roundRect(4,4,504,120,12);
+} else {
+  cx.rect(4,4,504,120);
+}
+cx.fill();
 cx.fillStyle='#e8dcc0';cx.font='bold 26px Quicksand,sans-serif';cx.textAlign='center';cx.textBaseline='middle';
 const w=e.t.split(' ');let ls=[],l='';w.forEach(x=>{if(cx.measureText(l+x+' ').width>460&&l){ls.push(l.trim());l=x+' '}else l+=x+' '});ls.push(l.trim());
 const lh=30,sy=64-(ls.length-1)*lh/2;ls.forEach((x,j)=>cx.fillText(x,256,sy+j*lh));
